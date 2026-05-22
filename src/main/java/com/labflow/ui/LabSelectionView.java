@@ -90,6 +90,11 @@ public class LabSelectionView {
         ScrollPane scroll = new ScrollPane(labGrid);
         scroll.setFitToWidth(true);
         scroll.getStyleClass().add("page");
+        scroll.viewportBoundsProperty().addListener((obs, old, bounds) -> {
+            if (bounds != null) {
+                labGrid.setPrefWrapLength(Math.max(300, bounds.getWidth() - 18));
+            }
+        });
         root.getChildren().addAll(top, subtitle, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
         UIComponents.decorateButtonsIn(root);
@@ -123,7 +128,9 @@ public class LabSelectionView {
     private VBox labCard(Lab lab) {
         VBox card = new VBox(12);
         card.getStyleClass().add("lab-card");
+        card.setMinSize(240, 214);
         card.setPrefSize(290, 214);
+        card.setMaxWidth(340);
 
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -162,7 +169,9 @@ public class LabSelectionView {
         VBox card = new VBox(14);
         card.getStyleClass().add("lab-card");
         card.getStyleClass().add("lab-add-card");
+        card.setMinSize(240, 214);
         card.setPrefSize(290, 214);
+        card.setMaxWidth(340);
         card.setAlignment(Pos.CENTER);
         card.setOnMouseClicked(event -> showCreateOrJoinDialog());
         Label plus = new Label("+");

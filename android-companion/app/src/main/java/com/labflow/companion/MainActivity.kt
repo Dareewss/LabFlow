@@ -1,4 +1,4 @@
-package com.labflow.companion
+﻿package com.labflow.companion
 
 import android.Manifest
 import android.app.AlertDialog
@@ -661,7 +661,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 counts.forEach { (status, total) ->
                     addView(TextView(this@MainActivity).apply {
-                        text = "${status.replace('_', ' ')}  Ä‚ËĂ˘â€šÂ¬Ă‹Â  $total"
+                        text = "${status.replace('_', ' ')}  •  $total"
                         textSize = 12.5f
                         typeface = Typeface.DEFAULT_BOLD
                         setTextColor(colors.foreground)
@@ -714,7 +714,7 @@ class MainActivity : AppCompatActivity() {
                             setTextColor(colors.foreground)
                         })
                         addView(TextView(this@MainActivity).apply {
-                            text = "${activity.username.orEmpty().ifBlank { "LabFlow" }} Ä‚ËĂ˘â€šÂ¬Ă‹Â ${compactDateTime(activity.timestamp)}"
+                            text = "${activity.username.orEmpty().ifBlank { "LabFlow" }} • ${compactDateTime(activity.timestamp)}"
                             textSize = 12f
                             setTextColor(colors.muted)
                             setPadding(0, dp(6), 0, 0)
@@ -741,7 +741,7 @@ class MainActivity : AppCompatActivity() {
                             setTextColor(colors.foreground)
                         })
                         addView(TextView(this@MainActivity).apply {
-                            text = "Risk ${risk.score}% Ä‚ËĂ˘â€šÂ¬Ă‹Â ${risk.level.orEmpty().ifBlank { "UNKNOWN" }}"
+                            text = "Risk ${risk.score}% • ${risk.level.orEmpty().ifBlank { "UNKNOWN" }}"
                             textSize = 12.5f
                             typeface = Typeface.DEFAULT_BOLD
                             setTextColor(colors.danger)
@@ -1064,7 +1064,7 @@ class MainActivity : AppCompatActivity() {
                 setPadding(0, dp(4), 0, 0)
             })
             addView(TextView(this@MainActivity).apply {
-                text = "${tr("borrowed_prefix", "Borrowed")} Ă˘â‚¬Ë ${tr("due_prefix", "Due")} ${item.expectedReturnDate.orEmpty().ifBlank { tr("not_set", "not set") }}"
+                text = "${tr("borrowed_prefix", "Borrowed")} • ${tr("due_prefix", "Due")} ${item.expectedReturnDate.orEmpty().ifBlank { tr("not_set", "not set") }}"
                 textSize = 12.5f
                 setTextColor(deadlineColor(item.expectedReturnDate))
                 setPadding(0, dp(10), 0, dp(8))
@@ -1104,7 +1104,7 @@ class MainActivity : AppCompatActivity() {
                 setPadding(0, dp(4), 0, 0)
             })
             addView(TextView(this@MainActivity).apply {
-                text = "${tr("borrowed_prefix", "Borrowed")} ${compactDate(item.borrowDate)} Ă˘â‚¬Ë ${tr("returned_prefix", "Returned")} ${compactDate(item.actualReturnDate)}"
+                text = "${tr("borrowed_prefix", "Borrowed")} ${compactDate(item.borrowDate)} • ${tr("returned_prefix", "Returned")} ${compactDate(item.actualReturnDate)}"
                 textSize = 12f
                 setTextColor(colors.muted)
                 setPadding(0, dp(8), 0, 0)
@@ -2162,7 +2162,7 @@ class MainActivity : AppCompatActivity() {
                 })
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(TextView(this@MainActivity).apply {
-                text = "Ä‚ËĂ˘â€šÂ¬ÄąĹş"
+                text = "›"
                 textSize = 18f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(colors.muted)
@@ -3107,4 +3107,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(textView)
     }
 }
+
+
 

@@ -334,7 +334,8 @@ public class DashboardView {
         TextField search = new TextField();
         search.getStyleClass().add("search-field");
         search.setPromptText(t("dashboard.searchPrompt", "Search equipment, users, records..."));
-        search.setPrefWidth(460);
+        search.setMinWidth(160);
+        search.setPrefWidth(320);
         search.setTooltip(KeyboardShortcutManager.tooltip("Search across LabFlow (Ctrl+F)"));
         HBox.setHgrow(search, Priority.ALWAYS);
         search.setOnAction(event -> showGlobalSearch(search.getText()));
@@ -407,6 +408,7 @@ public class DashboardView {
         sidebarLogo.getStyleClass().add("sidebar-logo");
         sidebarLabLabel = new Label(session.getCurrentLab() == null ? t("dashboard.noLabSelected", "No lab selected") : session.getCurrentLab().getName());
         sidebarLabLabel.getStyleClass().add("sidebar-lab");
+        sidebarLabLabel.setWrapText(true);
         sidebar.getChildren().addAll(sidebarLogo, sidebarLabLabel, sidebarHeading(t("dashboard.general", "GENERAL")));
         sidebar.getChildren().add(menu("D", t("dashboard.dashboard", "Dashboard"), this::showDashboardContent, true));
         sidebar.getChildren().add(menu("E", t("dashboard.equipment", "Equipment"), this::openInventoryView, false));
@@ -1177,7 +1179,7 @@ public class DashboardView {
             if (entry.getUserId() == session.getCurrentUserId()) {
                 continue;
             }
-            MenuItem item = new MenuItem(entry.displayName() + " • " + entry.getUsername());
+            MenuItem item = new MenuItem(entry.displayName() + " - " + entry.getUsername());
             item.setOnAction(event -> switchToRecentAccount(entry));
             profile.getItems().add(item);
         }
@@ -1410,10 +1412,10 @@ public class DashboardView {
             itemCount = equipmentService.getAllEquipment().size();
         } catch (Exception ignored) {
         }
-        statusItemsLabel.setText("📦 " + itemCount + " " + t("dashboard.items", "items"));
-        statusAiLabel.setText(aiAssistantService.isConfigured() ? "🟢 " + t("dashboard.aiConnected", "AI Connected") : "🔴 " + t("dashboard.aiOffline", "AI Offline"));
+        statusItemsLabel.setText(itemCount + " " + t("dashboard.items", "items"));
+        statusAiLabel.setText(aiAssistantService.isConfigured() ? t("dashboard.aiConnected", "AI Connected") : t("dashboard.aiOffline", "AI Offline"));
         String roleName = session.getEffectiveRole() == null ? t("dashboard.user", "User") : session.getEffectiveRole().getDisplayName();
-        statusUserLabel.setText(session.getCurrentUser().getUsername() + " • " + roleName);
+        statusUserLabel.setText(session.getCurrentUser().getUsername() + " - " + roleName);
         if (statusClockLabel != null) {
             statusClockLabel.setText(java.time.LocalTime.now().withSecond(0).withNano(0).toString());
         }
@@ -1435,3 +1437,4 @@ public class DashboardView {
         return LanguageManager.text(key, fallback);
     }
 }
+

@@ -1,0 +1,19 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/launcher_icon_bg" />
+    <item
+        android:width="160dp"
+        android:height="160dp"
+        android:gravity="bottom|right"
+        android:end="-12dp"
+        android:bottom="-12dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="80dp"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:startColor="@color/launcher_icon_glow"
+                android:endColor="@android:color/transparent" />
+        </shape>
+    </item>
+</layer-list>

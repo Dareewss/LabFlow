@@ -63,8 +63,8 @@ public class ProfessorDashboardView extends VBox implements RefreshableView {
                 "Review student borrowing, overdue items, fault reporting, and points.",
                 exportButton);
 
-        filter = new ComboBox<>(FXCollections.observableArrayList("Toți", "Cu overdue", "Activitate mare", "Activitate redusă"));
-        filter.setValue("Toți");
+        filter = new ComboBox<>(FXCollections.observableArrayList("All", "With Overdue", "High Activity", "Low Activity"));
+        filter.setValue("All");
         filter.setOnAction(event -> refreshFromExternalChange());
         HBox filters = new HBox(10, new Label("Filtru"), filter);
         filters.setAlignment(Pos.CENTER_LEFT);
@@ -78,7 +78,9 @@ public class ProfessorDashboardView extends VBox implements RefreshableView {
                 UIComponents.card("Fault Reports", faultsList));
         VBox.setVgrow(borrowsList, Priority.ALWAYS);
         VBox.setVgrow(faultsList, Priority.ALWAYS);
-        details.setPrefWidth(360);
+        details.setMinWidth(260);
+        details.setPrefWidth(320);
+        details.setMaxWidth(Double.MAX_VALUE);
 
         HBox content = new HBox(14, table, details);
         HBox.setHgrow(table, Priority.ALWAYS);
@@ -116,11 +118,11 @@ public class ProfessorDashboardView extends VBox implements RefreshableView {
     }
 
     private List<StudentActivitySummary> applyFilter(List<StudentActivitySummary> source) {
-        String mode = filter == null ? "Toți" : filter.getValue();
+        String mode = filter == null ? "All" : filter.getValue();
         return source.stream().filter(summary -> switch (mode) {
-            case "Cu overdue" -> summary.getOverdueCount() > 0;
-            case "Activitate mare" -> summary.getBorrowCount() >= 3 || summary.getFaultReportsCount() >= 2 || summary.getPoints() >= 10;
-            case "Activitate redusă" -> summary.getBorrowCount() <= 1 && summary.getFaultReportsCount() == 0;
+            case "With Overdue" -> summary.getOverdueCount() > 0;
+            case "High Activity" -> summary.getBorrowCount() >= 3 || summary.getFaultReportsCount() >= 2 || summary.getPoints() >= 10;
+            case "Low Activity" -> summary.getBorrowCount() <= 1 && summary.getFaultReportsCount() == 0;
             default -> true;
         }).toList();
     }
@@ -194,3 +196,4 @@ public class ProfessorDashboardView extends VBox implements RefreshableView {
         return column;
     }
 }
+

@@ -59,6 +59,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.input.ScrollEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
@@ -138,7 +140,7 @@ public class InventoryView extends VBox implements RefreshableView {
         emptyStateView.setManaged(false);
         StackPane tableShell = new StackPane(equipmentTable, emptyStateView);
         tableShell.getStyleClass().add("table-container");
-        tableShell.setMinWidth(760);
+        tableShell.setMinWidth(0);
         VBox containerPanel = createContainerPanel();
         HBox content = new HBox(14, containerPanel, tableShell);
         HBox.setHgrow(tableShell, Priority.ALWAYS);
@@ -149,12 +151,15 @@ public class InventoryView extends VBox implements RefreshableView {
         });
         ScrollPane contentScroll = new ScrollPane(content);
         contentScroll.setFitToHeight(true);
-        contentScroll.setFitToWidth(false);
+        contentScroll.setFitToWidth(true);
         contentScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         contentScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         contentScroll.getStyleClass().add("inventory-content-scroll");
-        contentScroll.viewportBoundsProperty().addListener((obs, old, bounds) ->
-                content.setMinWidth(Math.max(960, bounds.getWidth())));
+        contentScroll.viewportBoundsProperty().addListener((obs, old, bounds) -> {
+            if (bounds != null) {
+                content.setMinWidth(Math.max(0, bounds.getWidth()));
+            }
+        });
         loadingOverlay = new LoadingOverlay();
         StackPane contentLayer = new StackPane(contentScroll, loadingOverlay);
         getChildren().addAll(header, createFilters(), contentLayer, createActions());
@@ -176,6 +181,7 @@ public class InventoryView extends VBox implements RefreshableView {
         searchField = new TextField();
         searchField.setPromptText("Search name, category, location, container, serial, manufacturer, model, QR");
         searchField.setPrefWidth(320);
+        searchField.setMinWidth(180);
         searchField.textProperty().addListener((obs, old, value) -> applyFilters());
 
         categoryFilter = new ComboBox<>();
@@ -240,14 +246,16 @@ public class InventoryView extends VBox implements RefreshableView {
     }
 
     private Button createStatusQuickChip(String status, String styleClass) {
-        Button chip = new Button(status + " (0)");
+        Button chip = new Button();
         chip.getStyleClass().addAll("status-chip", styleClass);
+        chip.setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
         chip.setFocusTraversable(false);
         chip.setOnAction(event -> {
             statusFilter.setValue(status);
             applyFilters();
         });
         statusQuickChips.put(status, chip);
+        refreshStatusQuickChipContent(chip, status, 0);
         return chip;
     }
 
@@ -636,9 +644,24 @@ public class InventoryView extends VBox implements RefreshableView {
                 .collect(Collectors.groupingBy(equipment -> equipment.getStatus().name(), Collectors.counting()));
         for (Map.Entry<String, Button> entry : statusQuickChips.entrySet()) {
             long count = counts.getOrDefault(entry.getKey(), 0L);
-            entry.getValue().setText(entry.getKey() + " (" + count + ")");
+            refreshStatusQuickChipContent(entry.getValue(), entry.getKey(), count);
         }
         updateStatusQuickSelection();
+    }
+
+    private void refreshStatusQuickChipContent(Button chip, String status, long count) {
+        EquipmentStatus equipmentStatus = EquipmentStatus.fromString(status);
+        Circle dot = new Circle(4.5, Color.web(equipmentStatus.getColor()));
+        dot.setStroke(Color.color(1, 1, 1, ThemeManager.isLight() ? 0.18 : 0.10));
+        dot.setStrokeWidth(1);
+
+        Label label = new Label(status + " (" + count + ")");
+        label.getStyleClass().add("status-chip-label");
+
+        HBox content = new HBox(8, dot, label);
+        content.setAlignment(Pos.CENTER_LEFT);
+        chip.setGraphic(content);
+        chip.setText(null);
     }
 
     private void updateStatusQuickSelection() {

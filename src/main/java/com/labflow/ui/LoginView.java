@@ -38,6 +38,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -344,7 +345,7 @@ public class LoginView extends BorderPane {
         return brand;
     }
 
-    private VBox createLoginForm() {
+    private ScrollPane createLoginForm() {
         VBox wrapper = new VBox(20);
         wrapper.setAlignment(Pos.CENTER);
         wrapper.setPadding(new Insets(42));
@@ -415,7 +416,21 @@ public class LoginView extends BorderPane {
         }
         nodes.add(form);
         wrapper.getChildren().addAll(nodes);
-        return wrapper;
+
+        ScrollPane scrollPane = new ScrollPane(wrapper);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.getStyleClass().add("login-scroll");
+        scrollPane.viewportBoundsProperty().addListener((obs, old, bounds) -> {
+            double availableWidth = bounds == null ? 540 : bounds.getWidth();
+            double targetWidth = Math.max(320, Math.min(540, availableWidth - 36));
+            wrapper.setPrefWidth(targetWidth);
+            wrapper.setPadding(new Insets(targetWidth < 380 ? 24 : 42));
+            form.setPadding(new Insets(targetWidth < 380 ? 22 : 32));
+        });
+        return scrollPane;
     }
 
     private BorderPane createFooter() {
