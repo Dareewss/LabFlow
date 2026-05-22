@@ -1,0 +1,718 @@
+LabFlow - descriere completa si audit tehnic
+============================================
+
+Data audit: 2026-05-12
+Build verificat: mvn -q compile - PASS
+Teste verificate: mvn -q test - PASS
+
+1. Descriere generala
+---------------------
+
+LabFlow este o aplicatie desktop JavaFX pentru administrarea laboratoarelor si a echipamentelor din ele. Aplicatia ruleaza local pe Windows, foloseste Java 21, JavaFX 21 si SQLite, iar datele sunt separate pe laboratoare. Scopul ei este sa ajute un laborator real sa urmareasca inventarul, containerele, consumabilele, imprumuturile, defectiunile, rezervarile, mentenanta, utilizatorii, rolurile, exporturile si activitatea.
+
+Arhitectura principala este:
+
+UI -> Service -> DAO -> SQLite
+
+- UI: ecranele JavaFX si interactiunea cu utilizatorul.
+- Service: reguli de business, validari si permisiuni.
+- DAO: acces SQL la baza de date.
+- SQLite: persistenta locala in labflow.db.
+
+Aplicatia are si un server API local pentru integrare cu alte tool-uri locale si un AI Helper bazat pe un endpoint LLM OpenAI-compatible, configurat in prezent pentru Gemini.
+
+2. Tehnologii si dependinte
+---------------------------
+
+- Java 21
+- JavaFX 21
+- Maven
+- SQLite JDBC
+- HikariCP
+- BCrypt
+- ZXing pentru QR codes
+- Apache POI pentru Excel
+- iText pentru PDF
+- Gson pentru JSON/API/AI
+- SLF4J + Logback pentru logging
+- Montserrat font inclus in resources
+
+3. Pornirea aplicatiei
+----------------------
+
+Fisierul start.bat:
+
+- gaseste folderul proiectului;
+- verifica existenta pom.xml;
+- verifica daca Java este in PATH;
+- cauta Maven local sau global;
+- descarca Maven 3.9.5 daca lipseste;
+- seteaza configuratia AI pentru Gemini;
+- porneste aplicatia cu:
+
+  mvn -DskipTests clean javafx:run
+
+Observatie importanta:
+
+- start.bat contine in prezent o cheie Gemini hardcodata pentru ca AI Helper sa mearga imediat local. Este comod pentru demo, dar este o problema de securitate daca proiectul este publicat sau trimis altcuiva.
+
+4. Login si conturi
+-------------------
+
+Aplicatia porneste cu LoginView daca nu exista Remember Me activ.
+
+Functionalitati:
+
+- login cu username si parola;
+- parole verificate cu BCrypt;
+- Remember Me local;
+- Sign Up pentru utilizatori noi;
+- dupa creare, utilizatorul primeste automat un Test Lab protejat;
+- logout curata sesiunea.
+
+Conturi implicite:
+
+- admin / admin123
+- professor / professor123
+- technician / technician123
+
+5. Laboratoare
+--------------
+
+LabSelectionView permite:
+
+- alegerea unui laborator existent;
+- crearea unui laborator nou;
+- intrarea intr-un laborator prin invite code;
+- copierea codului de invitatie;
+- redenumirea laboratorului;
+- stergerea laboratorului daca nu este protejat;
+- administrarea membrilor din meniul labului;
+- tranzitie vizuala catre dashboard.
+
+Fiecare laborator are:
+
+- id;
+- nume;
+- invite code unic;
+- owner;
+- culoare/paleta proprie;
+- membri cu roluri diferite;
+- inventar, containere, imprumuturi, rapoarte, rezervari si loguri izolate.
+
+Test Lab:
+
+- este creat automat pentru utilizatori noi;
+- poate fi redenumit;
+- nu poate fi sters.
+
+6. Roluri si permisiuni
+-----------------------
+
+Roluri definite:
+
+- ADMIN
+- PROFESSOR
+- TECHNICIAN
+- STUDENT
+- GUEST
+
+Owner-ul labului:
+
+- este utilizatorul care a creat labul;
+- are acces la Owner Panel;
+- poate adauga membri;
+- poate crea guest accounts;
+- poate schimba roluri;
+- poate elimina membri;
+- nu poate fi eliminat din propriul lab.
+
+ADMIN:
+
+- are acces larg la dashboard, inventory, logs, exporturi si administrare.
+
+TECHNICIAN:
+
+- poate gestiona echipamente, mentenanta si defectiuni.
+
+PROFESSOR:
+
+- poate imprumuta, returna si raporta defectiuni.
+
+STUDENT/GUEST:
+
+- roluri pentru acces limitat si extindere.
+
+7. Dashboard
+------------
+
+DashboardView contine:
+
+- top bar cu search global;
+- sidebar responsive;
+- profile chip;
+- switch tema;
+- actiuni rapide;
+- statistici de inventar;
+- health score pentru lab;
+- recomandari inteligente;
+- top risky equipment;
+- activitate recenta;
+- notificari.
+
+Dashboard-ul se adapteaza dupa rol si dupa dimensiunea ecranului.
+
+8. Inventory
+------------
+
+InventoryView este centrul aplicatiei.
+
+Functionalitati:
+
+- lista echipamente in tabel;
+- cautare live;
+- filtre dupa categorie, status, locatie, tag, mentenanta, arhiva;
+- organizare pe containere;
+- panel de containere cu numar de iteme;
+- actiuni rapide pe scroll orizontal;
+- context menu la click dreapta;
+- add/edit equipment cu wizard responsive;
+- view details;
+- retire/archive/restore;
+- borrow/return;
+- report fault;
+- move to container;
+- add stock / consume stock;
+- import test kits;
+- export Excel;
+- export QR labels;
+- clear types/locations.
+
+Containere:
+
+- pot fi create, redenumite si sterse;
+- stergerea unui container muta itemele in No Container;
+- culorile container rail sunt acum legate de paleta temei.
+
+Test kits:
+
+- Robotics Starter Kit;
+- Electronics Measurement Kit;
+- Chemistry Safety Kit;
+- fiecare kit creeaza container si iteme;
+- importul este idempotent: nu dubleaza itemele existente;
+- repara containere existente/duplicate daca lipsesc iteme.
+
+9. Equipment
+------------
+
+Un echipament are:
+
+- nume;
+- categorie;
+- descriere;
+- locatie;
+- status;
+- QR code;
+- serial number;
+- manufacturer;
+- model;
+- purchase date;
+- last maintenance;
+- next maintenance;
+- maintenance interval;
+- maintenance notes;
+- item type: ASSET sau CONSUMABLE;
+- quantity;
+- minimum quantity;
+- unit;
+- tags;
+- container;
+- archive state.
+
+Statusuri:
+
+- AVAILABLE
+- BORROWED
+- DEFECT
+- MAINTENANCE
+- RETIRED
+
+10. QR codes
+------------
+
+La creare, fiecare echipament primeste:
+
+- text QR: LABFLOW-EQ-{id}
+- imagine PNG generata cu ZXing;
+- calea salvata in baza de date.
+
+QR labels pot fi exportate in PDF.
+
+11. Borrowing
+-------------
+
+BorrowingView permite:
+
+- vizualizare imprumuturi;
+- imprumut echipament;
+- returnare echipament;
+- returnare cu stare;
+- checklist de returnare;
+- semnaturi;
+- evidenta overdue.
+
+La imprumut:
+
+- equipment devine BORROWED;
+- borrow record devine ACTIVE.
+
+La returnare:
+
+- equipment revine AVAILABLE daca este in regula;
+- equipment devine DEFECT daca este returnat defect;
+- se poate crea fault report automat.
+
+12. Fault Reports
+-----------------
+
+FaultReportsView permite:
+
+- creare raport defectiune;
+- upload/atasamente;
+- severitate;
+- prioritate;
+- asignare catre tehnician;
+- preluare raport;
+- rezolvare;
+- respingere;
+- export PDF.
+
+Statusuri:
+
+- OPEN
+- IN_PROGRESS
+- RESOLVED
+- REJECTED
+
+Severitati:
+
+- MINOR
+- MAJOR
+- CRITICAL
+
+Prioritati:
+
+- LOW
+- NORMAL
+- HIGH
+- URGENT
+
+13. Reservations si Calendar
+----------------------------
+
+Aplicatia include:
+
+- ReservationsView;
+- CalendarView;
+- ReservationService;
+- ReservationDAO;
+- model CalendarEvent;
+- statusuri pentru rezervari.
+
+Rezervarile sunt legate de lab, equipment si user.
+
+14. Maintenance si stock
+------------------------
+
+Mentenanta:
+
+- interval de mentenanta pe echipament;
+- last maintenance date;
+- next maintenance date;
+- status Due Soon / Overdue / OK;
+- mark maintenance completed;
+- maintenance_records in baza de date.
+
+Stock:
+
+- pentru item_type CONSUMABLE;
+- add stock;
+- consume stock;
+- minimum quantity;
+- stock_movements in baza de date.
+
+15. Tags
+--------
+
+TagService si TagDAO permit:
+
+- creare tag-uri pe lab;
+- atasare tag-uri la echipamente;
+- filtrare dupa tag;
+- persistenta in tags si equipment_tags.
+
+16. Owner Panel
+---------------
+
+LabOwnerPanelView permite owner-ului:
+
+- vizualizare sumar membri;
+- copiere invite code;
+- adaugare user existent dupa username exact;
+- creare guest account;
+- schimbare roluri;
+- eliminare membri;
+- cautare/filter membri.
+
+17. AI Helper
+-------------
+
+AiAssistantView este un ecran tip chat/start page.
+
+Functionalitati:
+
+- prompt central;
+- sugestii rapide;
+- Generate Plan;
+- Run Plan;
+- afisare plan ca mesaje;
+- afisare rezultate ca mesaje.
+
+AiAssistantService:
+
+- foloseste un endpoint OpenAI-compatible;
+- default curent: Gemini OpenAI-compatible endpoint;
+- model default: gemini-2.5-flash;
+- citeste cheia din LABFLOW_AI_API_KEY sau GEMINI_API_KEY;
+- trimite context despre user, rol si membri;
+- cere raspuns JSON strict;
+- executa actiuni controlate prin service-uri.
+
+Actiuni AI suportate:
+
+- SET_ROLE
+- ADD_MEMBER
+- REMOVE_MEMBER
+- CREATE_FULL_LAB
+- IMPORT_TEST_KITS
+- RENAME_LAB
+- CHANGE_THEME
+- CREATE_GUEST
+- SUMMARIZE_LAB
+
+Securitate AI:
+
+- AI-ul nu modifica direct baza de date;
+- toate actiunile trec prin LabService/TestKitImportService;
+- regulile de owner/admin raman valabile;
+- planul trebuie generat si apoi rulat explicit.
+
+18. Exporturi
+-------------
+
+ExcelExportService:
+
+- export inventar in Excel.
+
+PdfExportService:
+
+- export rapoarte in PDF.
+
+QRLabelExportService:
+
+- export etichete QR in PDF.
+
+19. API local
+-------------
+
+Pachetul api include:
+
+- LocalApiServer;
+- AuthApiHandler;
+- EquipmentApiHandler;
+- BorrowApiHandler;
+- FaultApiHandler;
+- ApiSecurity;
+- ApiResponseUtil;
+- ApiConfig.
+
+Scop:
+
+- expunere locala pentru automatizari/integrari;
+- JSON prin Gson;
+- securizare prin ApiSecurity.
+
+20. UI si teme
+--------------
+
+Aplicatia are:
+
+- dark theme;
+- light theme;
+- palete de culoare pe lab: RED, GREEN, PURPLE, BLUE;
+- top bar theme-aware;
+- sidebar responsive;
+- inventory action rail cu scroll;
+- container rail colorat dupa tema;
+- dialoguri theme-aware;
+- tranzitie de intrare in lab cu culoarea temei;
+- wizard responsive pentru add/edit equipment;
+- font Montserrat.
+
+21. Structura proiectului
+-------------------------
+
+Root:
+
+- pom.xml: configuratie Maven.
+- start.bat: pornire Windows si configuratie AI.
+- des.txt: descriere si audit.
+- labflow.db: baza de date locala, generata/folosita la runtime.
+- logs/: loguri Logback.
+
+src/main/java/com/labflow:
+
+- LabFlowApp.java: entry point JavaFX.
+
+api:
+
+- server API local si handler-e JSON.
+
+dao:
+
+- acces SQL pentru users, labs, equipment, containers, borrow records, faults, notifications, tags, reservations, analytics.
+
+model:
+
+- obiectele de domeniu: User, Lab, Equipment, BorrowRecord, FaultReport, Reservation, Tag etc.
+
+service:
+
+- logica de business: equipment, borrow, faults, labs, AI, notifications, risk, recommendations, health, calendar.
+
+ui:
+
+- toate ecranele JavaFX.
+
+util:
+
+- sesiune, teme, remember me, notificari, QR, exporturi, refresh bus, audit diff.
+
+resources:
+
+- css;
+- fonts;
+- logback.xml.
+
+22. Baza de date
+----------------
+
+Tabele principale:
+
+- users
+- labs
+- lab_members
+- equipment
+- equipment_containers
+- borrow_records
+- fault_reports
+- fault_attachments
+- activity_log
+- notifications
+- tags
+- equipment_tags
+- maintenance_records
+- reservations
+- stock_movements
+- checklist_templates
+- checklist_items
+- return_checklist_results
+
+DatabaseInitializer:
+
+- creeaza tabele;
+- migreaza coloane lipsa;
+- reconstruieste tabele legacy;
+- creeaza indexuri;
+- seteaza userii default;
+- creeaza lab default.
+
+23. Fluxuri importante
+----------------------
+
+Flux login:
+
+1. User introduce credentiale.
+2. UserDAO verifica parola.
+3. SessionManager retine userul.
+4. Userul alege labul.
+5. DashboardView se deschide.
+
+Flux creare lab:
+
+1. User introduce nume.
+2. LabService creeaza lab.
+3. Ownerul este adaugat ca ADMIN.
+4. Labul primeste invite code.
+
+Flux import kituri:
+
+1. AI Helper sau InventoryView cere import.
+2. TestKitImportService cauta containere existente.
+3. Creeaza containere lipsa.
+4. Adauga itemele lipsa.
+5. Sare peste itemele deja existente.
+
+Flux add equipment:
+
+1. Wizard colecteaza date.
+2. EquipmentService valideaza.
+3. EquipmentDAO insereaza.
+4. QRCodeService genereaza QR.
+5. Tags sunt inlocuite/adaugate.
+
+Flux delete lab:
+
+1. LabService verifica owner.
+2. LabDAO sterge toate datele copil in tranzactie.
+3. Sterge labul daca nu este protected.
+
+24. Audit: buguri si discrepante gasite
+---------------------------------------
+
+Status build/test:
+
+- mvn -q compile: PASS
+- mvn -q test: PASS
+
+Buguri critice reparate recent:
+
+- EquipmentDAO.insert avea placeholder lipsa pentru unit in SQL.
+- SQLite JDBC nu suporta getGeneratedKeys in contextul folosit; insert-ul foloseste acum SELECT last_insert_rowid().
+- LabDAO.delete producea FOREIGN KEY constraint failed pentru ca nu stergea toate tabelele dependente; acum sterge attachments, checklist results, equipment_tags, stock, reservations, maintenance, faults, borrows, notifications, tags, equipment, containers, logs, members si lab.
+- Tranzitia de intrare in lab lasa sa se vada alb in dark theme; acum scene fill foloseste culoarea temei labului.
+- Container rail avea culori vechi hardcodate; acum are override-uri bazate pe accentul temei.
+
+Discrepante / riscuri ramase:
+
+1. Cheie AI hardcodata in start.bat
+
+- Severitate: mare daca proiectul este publicat.
+- Motiv: cheia Gemini este salvata direct in script.
+- Impact: oricine primeste proiectul poate folosi cheia.
+- Recomandare: mutare in variabila de mediu sau fisier local ignorat, de exemplu ai.env.
+
+2. Test coverage foarte mica
+
+- Severitate: mare pentru stabilitate.
+- Exista doar test pentru UserDAO.
+- Module importante netestate: LabDAO.delete, EquipmentDAO.insert, TestKitImportService, BorrowService, FaultReportService, AiAssistantService, ReservationService.
+- Recomandare: teste de integrare pe SQLite temporar pentru fluxurile critice.
+
+3. CSS are straturi vechi cu culori hardcodate
+
+- Severitate: medie.
+- Exista multe culori hardcodate in light-theme.css si dark-theme.css.
+- Unele sunt intentionate pentru palete si fallback, dar altele sunt ramase din versiuni vechi si sunt suprascrise mai jos prin override-uri.
+- Impact: greu de mentinut, pot aparea discrepante cand se schimba tema.
+- Recomandare: curatare CSS intr-un set unic de token-uri -labflow-*.
+
+4. start.bat ruleaza mereu clean javafx:run
+
+- Severitate: mica/medie.
+- Impact: pornire mai lenta pentru demo.
+- Recomandare: folosire javafx:run fara clean in modul normal, clean doar pentru rebuild.
+
+5. AI Helper depinde de internet si quota Gemini
+
+- Severitate: medie.
+- Daca nu exista internet, quota sau cheia nu este valida, Generate Plan poate esua.
+- Recomandare: fallback local simplu pentru comenzi cunoscute: import kits, summarize lab, set role.
+
+6. AI Helper poate genera actiuni gresite daca promptul este ambiguu
+
+- Severitate: medie.
+- Exista Run Plan separat, deci exista un pas de control.
+- Recomandare: confirmare suplimentara pentru actiuni destructive: REMOVE_MEMBER, DELETE/CREATE multe conturi, role admin.
+
+7. Delete lab sterge datele, dar UI trebuie verificat dupa stergere
+
+- Severitate: medie.
+- DAO este reparat, dar UX dupa stergerea labului trebuie verificat manual: daca labul curent era cel sters, utilizatorul trebuie mutat clar pe alt lab sau in LabSelection.
+
+8. API local trebuie auditat separat
+
+- Severitate: medie.
+- Exista ApiSecurity, dar auditul manual complet al endpointurilor nu a fost facut.
+- Recomandare: verificare token/auth, input validation si limitare localhost.
+
+9. Exception handling in DAO-uri este inconsistent
+
+- Severitate: medie.
+- Unele DAO-uri logheaza si returneaza valori goale, altele arunca RuntimeException.
+- Impact: unele erori pot fi ascunse si apar in UI ca rezultate incomplete.
+- Recomandare: standardizare: erorile de write sa arunce exceptii clare, erorile de read sa fie raportate controlat.
+
+10. Date legacy si migrari
+
+- Severitate: medie.
+- DatabaseInitializer reconstruieste unele tabele legacy, dar baza labflow.db poate contine date vechi incomplete.
+- Recomandare: script de health check DB care verifica FK, coloane si date orfane.
+
+11. Secret management lipseste
+
+- Severitate: medie/mare.
+- Nu exista .env loader dedicat si nici fisier exemplu pentru configuratii.
+- Recomandare: ai.env local + ai.env.example fara chei reale.
+
+12. UI responsiveness trebuie testat manual pe mai multe rezolutii
+
+- Severitate: mica/medie.
+- Au fost facute multe fixuri responsive, dar nu exista teste automate vizuale.
+- Recomandare: checklist manual pentru 1366x768, 1600x900, 1920x1080 si ultrawide.
+
+13. Inconsistente de limba
+
+- Severitate: mica.
+- UI-ul este in engleza, userul/proiectul foloseste romana in prezentare.
+- Exista LanguageManager, dar localizarea nu pare completa peste tot.
+- Recomandare: fie UI complet engleza pentru concurs, fie i18n complet RO/EN.
+
+14. Modelele au culori hardcodate
+
+- Severitate: mica.
+- EquipmentStatus contine hex colors.
+- Daca UI vrea tema completa, culorile de status ar trebui mapate prin CSS/token-uri.
+
+15. Baza de date locala este in root
+
+- Severitate: mica/medie.
+- Pentru demo este ok.
+- Pentru distributie, ar fi mai bine in user data directory.
+
+25. Recomandari prioritare
+--------------------------
+
+Prioritate 1:
+
+- Scoate cheia AI din start.bat inainte de publicare.
+- Adauga teste pentru delete lab si import test kits.
+- Test manual: stergere lab cu equipment, tags, faults, reservations, stock, borrows.
+
+Prioritate 2:
+
+- Curata CSS-ul vechi si pastreaza doar token-uri theme-aware.
+- Adauga fallback local pentru AI Helper.
+- Standardizeaza exception handling in DAO-uri.
+
+Prioritate 3:
+
+- Adauga ai.env.example.
+- Adauga health check DB.
+- Adauga documentatie scurta pentru demo: conturi, fluxuri, AI, import kituri.
+
+26. Concluzie
+-------------
+
+LabFlow este deja o aplicatie complexa si demonstrabila: are laboratoare multiple, roluri, inventar, containere, QR, imprumuturi, defectiuni, rezervari, mentenanta, stock, exporturi, audit, teme si AI Helper. Build-ul si testele existente trec. Cele mai importante probleme ramase tin de securitatea cheii AI, lipsa testelor pe fluxurile critice, curatarea CSS-ului vechi si auditul complet al API-ului local.
