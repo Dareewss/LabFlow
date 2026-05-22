@@ -417,18 +417,28 @@ public class LoginView extends BorderPane {
         nodes.add(form);
         wrapper.getChildren().addAll(nodes);
 
-        ScrollPane scrollPane = new ScrollPane(wrapper);
+        StackPane centeredShell = new StackPane(wrapper);
+        centeredShell.setAlignment(Pos.CENTER);
+        centeredShell.setPadding(new Insets(24, 24, 24, 24));
+        centeredShell.setMaxWidth(Double.MAX_VALUE);
+        centeredShell.setMaxHeight(Double.MAX_VALUE);
+
+        ScrollPane scrollPane = new ScrollPane(centeredShell);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.getStyleClass().add("login-scroll");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0;");
+        scrollPane.setBackground(Background.EMPTY);
+        centeredShell.setBackground(Background.EMPTY);
         scrollPane.viewportBoundsProperty().addListener((obs, old, bounds) -> {
             double availableWidth = bounds == null ? 540 : bounds.getWidth();
             double targetWidth = Math.max(320, Math.min(540, availableWidth - 36));
             wrapper.setPrefWidth(targetWidth);
             wrapper.setPadding(new Insets(targetWidth < 380 ? 24 : 42));
             form.setPadding(new Insets(targetWidth < 380 ? 22 : 32));
+            centeredShell.setMinHeight(bounds == null ? 0 : bounds.getHeight());
         });
         return scrollPane;
     }
